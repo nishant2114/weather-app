@@ -1,90 +1,221 @@
+/* ===== GLOBAL ===== */
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background: linear-gradient(
+    135deg,
+    #f8fafc,
+    #eef2f7
+  );
 }
 
-.app {
+/* ===== CONTAINER ===== */
+.container {
+  max-width: 760px;
+  margin: auto;
   height: 100vh;
-  background: #0f172a;
-  color: white;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
+  padding: 24px;
+  transition: background 0.3s ease;
 }
 
-h1 {
-  margin-bottom: 10px;
+/* ===== DARK MODE ===== */
+.container.dark {
+  background: #020617;
+  box-shadow: inset 0 0 0 9999px rgba(255, 255, 255, 0.02);
 }
 
+.container.dark header,
+.container.dark .chat,
+.container.dark .summary strong,
+.container.dark .subtitle,
+.container.dark h3 {
+  color: #f8fafc;
+}
+
+.container.dark .chat-box,
+.container.dark .summary,
+.container.dark .chart-card {
+  background: #0f172a;
+}
+
+/* ===== HEADER ===== */
+header {
+  font-size: 26px;
+  font-weight: 600;
+  text-align: center;
+  color: #0f172a;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 12px;
+}
+
+/* ===== MODE BUTTON ===== */
+.mode-btn {
+  align-self: center;
+  margin-bottom: 16px;
+  background: transparent;
+  border: none;
+  color: #0284c7;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* ===== CHAT BOX ===== */
 .chat-box {
   flex: 1;
-  width: 100%;
-  max-width: 500px;
-  background: #020617;
-  border-radius: 10px;
-  padding: 15px;
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
   overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.msg {
-  max-width: 75%;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  font-size: 15px;
+/* ===== CHAT BUBBLES ===== */
+.chat {
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-.msg.user {
-  background: #38bdf8;
-  color: black;
+.chat.user {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: white;
   align-self: flex-end;
-  margin-left: auto;
 }
 
-.msg.bot {
-  background: #1e293b;
+.chat.bot {
+  background: #f1f5f9;
+  color: #0f172a;
   align-self: flex-start;
 }
 
-.time {
-  font-size: 10px;
-  opacity: 0.6;
+.container.dark .chat.bot {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+/* ===== WEATHER LINE (LIVE EFFECT) ===== */
+.weather-line {
+  color: #22c55e !important;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+/* ===== LOADER ===== */
+.loader {
+  width: 28px;
+  height: 28px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #0284c7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  align-self: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== SUMMARY ===== */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  background: white;
+  margin: 20px 0;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.summary div {
+  text-align: center;
+}
+
+.summary span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.summary strong {
+  display: block;
+  font-size: 18px;
   margin-top: 4px;
 }
 
+/* ===== TEMPERATURE GREEN ===== */
+.temp-green {
+  color: #16a34a;
+}
+
+/* ===== CHART CARD ===== */
+.chart-card {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  color: white;
+}
+
+.chart-card h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+/* ===== INPUT ===== */
 .input-area {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  width: 100%;
-  max-width: 500px;
+  gap: 12px;
 }
 
 input {
   flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5f5;
   font-size: 14px;
 }
 
+input:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+/* ===== BUTTONS ===== */
 button {
-  padding: 10px 15px;
+  padding: 14px 24px;
+  border-radius: 10px;
   border: none;
-  border-radius: 6px;
-  background: #38bdf8;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  font-weight: 600;
   cursor: pointer;
 }
 
 button:hover {
-  background: #0ea5e9;
+  opacity: 0.9;
 }
 
-button.clear {
+/* ===== CLEAR BUTTON ===== */
+.clear-btn {
+  margin-top: 12px;
   background: #ef4444;
 }
 
-button.clear:hover {
+.clear-btn:hover {
   background: #dc2626;
 }

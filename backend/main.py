@@ -1,15 +1,13 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from pathlib import Path
 
-# load .env
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-from backend.agent import agent_executor
+from .agent import run_agent   # ✅ IMPORTANT
 
 app = FastAPI()
 
@@ -26,6 +24,5 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    print("🔥 REQUEST:", req.message)
-    result = agent_executor.run(req.message)
+    result = run_agent(req.message)
     return {"response": result}

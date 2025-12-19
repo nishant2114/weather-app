@@ -1,25 +1,43 @@
 import os
-from langchain_openai import ChatOpenAI
-from langchain.agents import initialize_agent, Tool
-from backend.tools import get_weather
+from openai import OpenAI
+from .tools import get_weather
+# from agent import run_agent
 
-llm = ChatOpenAI(
-    openai_api_key=os.getenv("OPENAI_API_KEY"),  # ✅ FIXED
-    openai_api_base="https://openrouter.ai/api/v1",
-    model="gpt-3.5-turbo",
+# OpenRouter client (OpenAI SDK compatible)
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    default_headers={
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "Weather Chat App",
+    },
 )
 
-tools = [
-    Tool(
-        name="Weather",
-        func=get_weather,
-        description="Get weather for a city"
-    )
-]
+def extract_city(message: str) -> str:
+    words = message.lower().replace("?", "").split()
+    stop_words = {"weather", "in", "at", "of", "is", "the", "what"}
+    filtered = [w for w in words if w not in stop_words]
+    return filtered[-1] if filtered else ""
 
-agent_executor = initialize_agent(
-    tools=tools,
-    llm=llm,
-    agent="zero-shot-react-description",
-    verbose=True
-)
+def run_agent(message: str) -> str:
+    text = message.lower()
+
+    # 🌦️ Weather path
+    if "weather" in text:
+        city = extract_city(message)
+        return get_weather(city)
+
+    # 🤖 LLM path (DIRECT OpenRouter call)
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": message},
+            ],
+            temperature=0.3,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print("LLM ERROR:", e)
+        return "⚠️ AI service is temporarily unavailable. Please try again later."

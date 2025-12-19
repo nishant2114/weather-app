@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 function App() {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
+  const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dark, setDark] = useState(false);
   const bottomRef = useRef(null);
 
   // Auto scroll to bottom
@@ -12,52 +14,52 @@ function App() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  const getWeatherEmoji = (text) => {
-    const t = text.toLowerCase();
-    if (t.includes("clear")) return "☀️";
-    if (t.includes("cloud")) return "☁️";
-    if (t.includes("rain")) return "🌧️";
-    if (t.includes("snow")) return "❄️";
-    if (t.includes("storm")) return "⛈️";
-    return "🌤️";
-  };
-
   const sendMessage = async () => {
     if (!message.trim()) return;
 
-    const userMsg = {
-      sender: "user",
-      text: message,
-      time: new Date().toLocaleTimeString(),
-    };
+    const userMessage = message;
 
-    setChat((prev) => [...prev, userMsg]);
-    setMessage("");
+    setChat((prev) => [...prev, { sender: "user", text: userMessage }]);
     setLoading(true);
+    setMessage("");
 
     try {
       const res = await fetch("/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message: userMessage }),
       });
+
+      if (!res.ok) throw new Error("Backend error");
 
       const data = await res.json();
 
-      const botMsg = {
-        sender: "bot",
-        text: `${getWeatherEmoji(data.response)} ${data.response}`,
-        time: new Date().toLocaleTimeString(),
-      };
+      // Bot message
+      setChat((prev) => [
+        ...prev,
+        { sender: "bot", text: data.response },
+      ]);
 
-      setChat((prev) => [...prev, botMsg]);
+      // ✅ SAFE parsing (supports 30.99, 28, etc.)
+      const tempMatch = data.response.match(/(-?\d+(\.\d+)?)/);
+      const conditionMatch = data.response.match(
+        /clear|cloud|rain|storm|snow|smoke|haze/i
+      );
+
+      if (tempMatch) {
+        setWeather({
+          temperature: tempMatch[1],
+          condition: conditionMatch ? conditionMatch[0] : "N/A",
+          time: new Date().toLocaleTimeString(),
+          query: userMessage,
+        });
+      }
     } catch (err) {
       setChat((prev) => [
         ...prev,
         {
           sender: "bot",
-          text: "❌ Error connecting to backend",
-          time: new Date().toLocaleTimeString(),
+          text: "⚠️ AI service is temporarily unavailable. Please try again later.",
         },
       ]);
     }
@@ -67,33 +69,80 @@ function App() {
 
   const clearChat = () => {
     setChat([]);
+    setWeather(null);
   };
 
   return (
-    <div className="app">
-      <h1>🌦️ Weather Chat App</h1>
+    <div className={`container ${dark ? "dark" : ""}`}>
+      <header>🌦️ Weather Assistant</header>
+
+      <p className="subtitle">
+        Real-time weather insights powered by API integration
+      </p>
+
+      <button className="mode-btn" onClick={() => setDark(!dark)}>
+        {dark ? "☀ Light Mode" : "🌙 Dark Mode"}
+      </button>
 
       <div className="chat-box">
         {chat.map((msg, i) => (
-          <div key={i} className={`msg ${msg.sender}`}>
-            <span>{msg.text}</span>
-            <div className="time">{msg.time}</div>
+          <div
+            key={i}
+            className={`chat ${msg.sender} ${
+              msg.sender === "bot" &&
+              msg.text.match(/\d+(\.\d+)?\s*°?\s*c/i)
+                ? "weather-line"
+                : ""
+            }`}
+          >
+            {msg.text}
           </div>
         ))}
-        {loading && <div className="msg bot">⏳ Fetching Weather Data</div>}
+
+        {loading && <div className="loader"></div>}
         <div ref={bottomRef}></div>
       </div>
+
+      {/* ✅ SUMMARY (same temperature as chat) */}
+      {weather && (
+        <div className="summary">
+          <div>
+            <span>🌡 Temperature</span>
+            <strong className="temp-green">
+              {weather.temperature} °C
+            </strong>
+          </div>
+
+          <div>
+            <span>🌤 Condition</span>
+            <strong>{weather.condition}</strong>
+          </div>
+
+          <div>
+            <span>🕒 Updated</span>
+            <strong>{weather.time}</strong>
+          </div>
+
+          <div>
+            <span>📍 Query</span>
+            <strong>{weather.query}</strong>
+          </div>
+        </div>
+      )}
 
       <div className="input-area">
         <input
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Ask weather... e.g. Pune weather"
+          placeholder="Enter city name (e.g. Pune weather)"
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
         <button onClick={sendMessage}>Send</button>
-        <button className="clear" onClick={clearChat}>Clear</button>
       </div>
+
+      <button className="clear-btn" onClick={clearChat}>
+        Clear Chat
+      </button>
     </div>
   );
 }
